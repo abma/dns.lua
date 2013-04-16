@@ -1,0 +1,56 @@
+This is a fork of http://luaforge.net/projects/lua-dns/
+
+
+Below is a code fragment that uses the library.  The code fragment
+won't run (because you would need more than the fragment).  But it
+will sort of show you how I used the library.  The variable "text" is
+a series of lines.  Each line is a query, and the expected results.
+The code would parse the text, then query the authoritative name
+servers, and make sure they served the expected result.
+
+-ztact
+
+----
+
+for line in string.gmatch (text, '[^\n]+') do
+
+  local pattern = '^(%S+)%s?(%S*)\t+(%w+)\t+(%S+)%s?(%S*)\t*(%S*)$'
+
+  local domain, host, type, data0, data1, ttl = string.match (line, pattern)
+
+  repeat
+    if string.match (line, '^%s*#') then  break  end
+    if not domain then  break  end
+    if host and #host > 0 then  domain = host..'.'..domain  end
+    if types[type] then  type = types[type]  end
+
+    local rr = dns.rr { type = type, class = 'IN', ttl = 0, name = domain }
+    if     type == 'A'     then  rr.a = data0
+    elseif type == 'CNAME' then  rr.cname = data0
+    elseif type == 'MX'    then  rr.pref, rr.mx = tonumber (data0), data1
+    else  print ('unsupported type', type)  end
+
+    if not domains[domain] then  domains[domain] = {}  end
+    if not domains[domain][type] then  domains[domain][type] = {}  end
+    table.insert (domains[domain][type], rr)
+    until true  end
+
+for i,server in pairs (servers) do
+
+  print ('server', server)
+  resolver = dns.resolver ()
+  resolver:setnameserver (server)
+
+  for domain, types in pairs (domains) do
+    for type, expect in pairs (types) do
+      -- print ('----', domain, type)
+      rrs = resolver:lookup (domain, type) or {}
+      verify (expect, rrs)
+      socket.sleep (0.2)
+      end  end  end
+
+print ()
+print ('found', status.found)
+print ('error', status.error)
+print ('extra', status.extra)
+
