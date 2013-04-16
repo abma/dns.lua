@@ -1,3 +1,7 @@
+dns.lua is a asynchronos dns-resolver implemented in lua.
+
+to make it useable, only prequesite are local dns servers and luasocket.
+
 This is a fork of http://luaforge.net/projects/lua-dns/
 
 
