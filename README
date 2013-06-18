@@ -1,4 +1,4 @@
-dns.lua is a asynchronos dns-resolver implemented in lua.
+dns.lua is a asynchronous dns-resolver implemented in lua.
 
 to make it useable, only prequesite are local dns servers and luasocket.
 
